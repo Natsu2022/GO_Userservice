@@ -1,0 +1,13 @@
+## Run project
+
+Requirements:
+- Docker
+- Docker Compose
+
+Run:
+```bash
+docker compose up --build
+
+API:
+
+http://localhost:3455
