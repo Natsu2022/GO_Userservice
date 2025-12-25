@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"time"
 
 	"OSCIRA.com/service/user_service/internal/repository"
@@ -15,23 +14,17 @@ func AuthGuard(sessionRepo repository.SessionRepository) fiber.Handler {
 		sid := c.Cookies("session_id")
 		if sid == "" {
 			return fiber.NewError(fiber.StatusUnauthorized, "missing session")
-		}else{
-			log.Println("step1 sid: " + sid)
 		}
 
 		sessionID, err := uuid.Parse(sid)
 		if err != nil {
 			return fiber.NewError(fiber.StatusUnauthorized, "invalid session")
-		}else{
-			log.Println("step2 Session: ", sessionID)
 		} 
 
 		// load session
 		sess, err := sessionRepo.GetSession(c.Context(), sessionID)
 		if err != nil {
 			return fiber.NewError(fiber.StatusUnauthorized, "step3 session not found")
-		}else{
-			log.Println("sessionRepo found session.")
 		}
 
 		// expired?

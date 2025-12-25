@@ -21,13 +21,13 @@ export APP_ENV ?= dev   # default = dev
 
 dev:
 	@echo "🚀 Building $(APP_NAME) in DEV mode..."
-	@APP_ENV=dev go build -o $(APP_NAME).exe $(CMD_DIR)/main.go
+	@APP_ENV=prod go build -ldflags="-s -w" -o $(OUTPUT) $(CMD_DIR)/main.go
 	@echo "▶ Running $(APP_NAME)..."
-	@APP_ENV=dev ./$(APP_NAME).exe
+	@APP_ENV=dev ./$(OUTPUT)
 
 run:
 	@echo "▶ Running service directly..."
-	@APP_ENV=dev ./$(APP_NAME).exe
+	@APP_ENV=dev ./$(OUTPUT)
 
 watch:
 	@echo "👀 Watching for code changes..."
