@@ -37,7 +37,7 @@ func LoadConfig() *Config {
 	envPath := filepath.Join(root, "env", appEnv+".env")
 
 	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("Warning: Cannot load %s", envPath)
+		log.Printf("Warning: Cannot load from local %s", envPath)
 	}
 
 	cfg := &Config{
