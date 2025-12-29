@@ -34,7 +34,24 @@ func (s *userService) CreateUser(ctx context.Context, req model.CreateUserReques
 		return uuid.Nil, errors.New("invalid email format")
 	}
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword(
+		[]byte(req.Password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return uuid.Nil, err
+	}
 
-	return s.repo.Create(ctx, req, string(hash))
+	// 1. create user
+	userID, err := s.repo.Create(ctx, req, string(hash))
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	// 2. assign default role = guest
+	if err := s.repo.AssignRole(ctx, userID, "guest"); err != nil {
+		return uuid.Nil, err
+	}
+
+	return userID, nil
 }

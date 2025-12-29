@@ -1,21 +1,3 @@
-ได้ครับ ด้านล่างนี้คือ **README ฉบับสมบูรณ์ (Production-ready)** ที่เหมาะกับงานของคุณจริง
-ใช้ได้ทั้ง **ส่งอาจารย์ / ให้เพื่อน clone ใช้ / ใช้ต่อยอดจริง**
-
-ผมเขียนโดยยึดจากบริบทโปรเจกต์ของคุณ:
-
-* Go + Fiber
-* PostgreSQL
-* Session-based authentication
-* ใช้งานผ่าน Docker Compose
-* เป้าหมาย: *clone → docker compose up → ใช้งานได้ทันที*
-
-คุณสามารถ **copy ทั้งไฟล์นี้ไปเป็น `README.md` ได้เลย**
-
----
-
-```md
-# GO User Service (OSCIRA_MCS)
-
 User Service เป็น Backend Service ที่พัฒนาด้วยภาษา **Go (Fiber Framework)**  
 รองรับระบบ **Authentication แบบ Session + Cookie**  
 และออกแบบมาให้สามารถรันได้ทันทีด้วย **Docker Compose**  

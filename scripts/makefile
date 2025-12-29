@@ -79,6 +79,23 @@ clean:
 	@echo "✨ Cleanup done."
 
 # =============================================================
+#                       Migration
+# =============================================================
+DB_URL=postgres://root:root1234@localhost:5434/mydb?sslmode=disable
+
+migrate-up:
+	@migrate -path ../migrations -database "$(DB_URL)" up
+
+migrate-down:
+	@migrate -path ../migrations -database "$(DB_URL)" down 
+
+migrate-drop:
+	@migrate -path ../migrations -database "$(DB_URL)" drop -f
+
+migrate-force:
+	@migrate -path ../migrations -database "$(DB_URL)" force 1
+
+# =============================================================
 #                       Help (default)
 # =============================================================
 help:

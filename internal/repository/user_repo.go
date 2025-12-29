@@ -12,6 +12,7 @@ type UserRepository interface {
 	Create(ctx context.Context, req model.CreateUserRequest, hash string) (uuid.UUID, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	UpdateAccountStatus(ctx context.Context, userID uuid.UUID, status bool) error
+	AssignRole(ctx context.Context, userID uuid.UUID, roleName string) error
 }
 
 type userRepository struct {
@@ -22,9 +23,9 @@ func NewUserRepository(db *pgxpool.Pool) UserRepository {
 	return &userRepository{db}
 }
 
-func (r *userRepository) Create(ctx context.Context, req model.CreateUserRequest, hash string) (uuid.UUID, error) {
+func (r *userRepository) Create(ctx context.Context,req model.CreateUserRequest,hash string,) (uuid.UUID, error) {
 
-	query := `
+	insertUserQuery := `
 		INSERT INTO users (
 			first_name, middle_name, last_name, display_name,
 			physical_gender, email, password, phone_number, signup_source
@@ -36,7 +37,7 @@ func (r *userRepository) Create(ctx context.Context, req model.CreateUserRequest
 	displayName := req.FirstName + " " + req.LastName
 	var id uuid.UUID
 
-	err := r.db.QueryRow(ctx, query,
+	err := r.db.QueryRow(ctx, insertUserQuery,
 		req.FirstName,
 		req.MiddleName,
 		req.LastName,
@@ -47,9 +48,23 @@ func (r *userRepository) Create(ctx context.Context, req model.CreateUserRequest
 		req.PhoneNumber,
 		req.SignupSource,
 	).Scan(&id)
+	if err != nil {
+		return uuid.Nil, err
+	}
 
-	return id, err
+	insertProfileQuery := `
+		INSERT INTO user_profiles (user_id, display_name, phone_number, physical_gender)
+		VALUES ($1, $2, $3, $4);
+	`
+
+	_, err = r.db.Exec(ctx, insertProfileQuery, id, displayName, req.PhoneNumber, req.PhysicalGender)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return id, nil
 }
+
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 

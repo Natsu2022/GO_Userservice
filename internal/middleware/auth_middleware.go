@@ -24,13 +24,13 @@ func AuthGuard(sessionRepo repository.SessionRepository) fiber.Handler {
 		// load session
 		sess, err := sessionRepo.GetSession(c.Context(), sessionID)
 		if err != nil {
-			return fiber.NewError(fiber.StatusUnauthorized, "step3 session not found")
+			return fiber.NewError(fiber.StatusUnauthorized, "session not found")
 		}
 
 		// expired?
 		if time.Now().After(sess.ExpiresAt) {
 			_ = sessionRepo.DeleteSession(c.Context(), sessionID)
-			return fiber.NewError(fiber.StatusUnauthorized, "step4 session expired")
+			return fiber.NewError(fiber.StatusUnauthorized, "session expired")
 		}
 
 		// store userID in context for next handler
