@@ -20,48 +20,71 @@ User Service เป็น Backend Service ที่พัฒนาด้วย�
 ```
 
 .
-├── README
+├── LICENSE
+├── README.md
 ├── cmd
-│   └── user_service
-│       └── main.go
+│   └── user_service
+│       └── main.go
 ├── deployments
-│   ├── docker
-│   │   ├── Dockerfile
-│   │   └── docker-compose.yml
-│   └── k8s
-│       ├── Upload_depl.yaml
-│       ├── Upload_impl.yaml
-│       └── Upload_svc.yaml
+│   ├── docker
+│   │   └── Dockerfile
+│   └── k8s
+│       ├── Upload_depl.yaml
+│       ├── Upload_impl.yaml
+│       └── Upload_svc.yaml
+├── docker-compose.yml
 ├── env
-│   └── dev.env
+│   └── dev.env
 ├── go.mod
 ├── go.sum
 ├── internal
-│   ├── config
-│   │   └── config.go
-│   ├── handler
-│   │   └── user_handler.go
-│   ├── middleware
-│   │   ├── auth_middleware.go
-│   │   └── error_handler.go
-│   ├── model
-│   │   ├── roles.go
-│   │   └── user.go
-│   ├── repository
-│   │   ├── session_repo.go
-│   │   └── user_repo.go
-│   ├── router
-│   │   └── router.go
-│   └── service
-│       ├── login.go
-│       └── register.go
+│   ├── config
+│   │   └── config.go
+│   ├── handler
+│   │   └── user_handler.go
+│   ├── middleware
+│   │   ├── auth_middleware.go
+│   │   └── error_handler.go
+│   ├── model
+│   │   ├── roles.go
+│   │   └── user.go
+│   ├── repository
+│   │   ├── assign_role.go
+│   │   ├── session_repo.go
+│   │   └── user_repo.go
+│   ├── router
+│   │   └── router.go
+│   └── service
+│       ├── login.go
+│       └── register.go
+├── migrations
+│   ├── 0000_drop_all_table.drop.sql
+│   ├── 0001_create_users_table.up.sql
+│   ├── 0002_create_roles_table.up.sql
+│   ├── 0003_create_user_role.up.sql
+│   ├── 0004_create_permissions_table.up.sql
+│   ├── 0005_create_role_permissions_table.up.sql
+│   ├── 0006_create_user_permissions_table.up.sql
+│   ├── 0007_create_session_table.up.sql
+│   ├── 0008_create_preference_table.up.sql
+│   ├── 0009_create_location_table.up.sql
+│   ├── 0010_create_source_list_table.up.sql
+│   ├── 0011_seed_superadmin.up.sql
+│   ├── 0012_seed_role.up.sql
+│   ├── 0013_seed_permission.up.sql
+│   ├── 0014_seed_role_permission.up.sql
+│   ├── 0015_assign_superadmin_role.up.sql
+│   └── 0016_create_user_profile.up.sql
 ├── pkg
-│   └── db
-│       └── postgres.go
-└── scripts
-    ├── makefile
-    ├── migrate.bat
-    └── migrate.sh
+│   └── db
+│       └── postgres.go
+├── scripts
+│   ├── makefile
+│   ├── migrate.bat
+│   └── migrate.sh
+├── services
+│   └── user_service
+│       └── migrations
 
 ````
 
