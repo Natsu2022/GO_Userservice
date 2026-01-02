@@ -1,196 +1,587 @@
-[![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/golang-migrate/migrate/ci.yaml?branch=master)](https://github.com/golang-migrate/migrate/actions/workflows/ci.yaml?query=branch%3Amaster)
-[![GoDoc](https://pkg.go.dev/badge/github.com/golang-migrate/migrate)](https://pkg.go.dev/github.com/golang-migrate/migrate/v4)
-[![Coverage Status](https://img.shields.io/coveralls/github/golang-migrate/migrate/master.svg)](https://coveralls.io/github/golang-migrate/migrate?branch=master)
-[![packagecloud.io](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/golang-migrate/migrate?filter=debs)
-[![Docker Pulls](https://img.shields.io/docker/pulls/migrate/migrate.svg)](https://hub.docker.com/r/migrate/migrate/)
-![Supported Go Versions](https://img.shields.io/badge/Go-1.24%2C%201.25-lightgrey.svg)
-[![GitHub Release](https://img.shields.io/github/release/golang-migrate/migrate.svg)](https://github.com/golang-migrate/migrate/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/golang-migrate/migrate/v4)](https://goreportcard.com/report/github.com/golang-migrate/migrate/v4)
-
-# migrate
-
-__Database migrations written in Go. Use as [CLI](#cli-usage) or import as [library](#use-in-your-go-project).__
-
-* Migrate reads migrations from [sources](#migration-sources)
-   and applies them in correct order to a [database](#databases).
-* Drivers are "dumb", migrate glues everything together and makes sure the logic is bulletproof.
-   (Keeps the drivers lightweight, too.)
-* Database drivers don't assume things or try to correct user input. When in doubt, fail.
-
-Forked from [mattes/migrate](https://github.com/mattes/migrate)
-
-## Databases
-
-Database drivers run migrations. [Add a new database?](database/driver.go)
-
-* [PostgreSQL](database/postgres)
-* [PGX v4](database/pgx)
-* [PGX v5](database/pgx/v5)
-* [Redshift](database/redshift)
-* [Ql](database/ql)
-* [Cassandra / ScyllaDB](database/cassandra)
-* [SQLite](database/sqlite)
-* [SQLite3](database/sqlite3) ([todo #165](https://github.com/mattes/migrate/issues/165))
-* [SQLCipher](database/sqlcipher)
-* [MySQL / MariaDB](database/mysql)
-* [Neo4j](database/neo4j)
-* [MongoDB](database/mongodb)
-* [CrateDB](database/crate) ([todo #170](https://github.com/mattes/migrate/issues/170))
-* [Shell](database/shell) ([todo #171](https://github.com/mattes/migrate/issues/171))
-* [Google Cloud Spanner](database/spanner)
-* [CockroachDB](database/cockroachdb)
-* [YugabyteDB](database/yugabytedb)
-* [ClickHouse](database/clickhouse)
-* [Firebird](database/firebird)
-* [MS SQL Server](database/sqlserver)
-* [rqlite](database/rqlite)
-
-### Database URLs
-
-Database connection strings are specified via URLs. The URL format is driver dependent but generally has the form: `dbdriver://username:password@host:port/dbname?param1=true&param2=false`
-
-Any [reserved URL characters](https://en.wikipedia.org/wiki/Percent-encoding#Percent-encoding_reserved_characters) need to be escaped. Note, the `%` character also [needs to be escaped](https://en.wikipedia.org/wiki/Percent-encoding#Percent-encoding_the_percent_character)
-
-Explicitly, the following characters need to be escaped:
-`!`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,`, `/`, `:`, `;`, `=`, `?`, `@`, `[`, `]`
-
-It's easiest to always run the URL parts of your DB connection URL (e.g. username, password, etc) through an URL encoder. See the example Python snippets below:
-
-```bash
-$ python3 -c 'import urllib.parse; print(urllib.parse.quote(input("String to encode: "), ""))'
-String to encode: FAKEpassword!#$%&'()*+,/:;=?@[]
-FAKEpassword%21%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D
-$ python2 -c 'import urllib; print urllib.quote(raw_input("String to encode: "), "")'
-String to encode: FAKEpassword!#$%&'()*+,/:;=?@[]
-FAKEpassword%21%23%24%25%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D
-$
-```
-
-## Migration Sources
-
-Source drivers read migrations from local or remote sources. [Add a new source?](source/driver.go)
-
-* [Filesystem](source/file) - read from filesystem
-* [io/fs](source/iofs) - read from a Go [io/fs](https://pkg.go.dev/io/fs#FS)
-* [Go-Bindata](source/go_bindata) - read from embedded binary data ([jteeuwen/go-bindata](https://github.com/jteeuwen/go-bindata))
-* [pkger](source/pkger) - read from embedded binary data ([markbates/pkger](https://github.com/markbates/pkger))
-* [GitHub](source/github) - read from remote GitHub repositories
-* [GitHub Enterprise](source/github_ee) - read from remote GitHub Enterprise repositories
-* [Bitbucket](source/bitbucket) - read from remote Bitbucket repositories
-* [Gitlab](source/gitlab) - read from remote Gitlab repositories
-* [AWS S3](source/aws_s3) - read from Amazon Web Services S3
-* [Google Cloud Storage](source/google_cloud_storage) - read from Google Cloud Platform Storage
-
-## CLI usage
-
-* Simple wrapper around this library.
-* Handles ctrl+c (SIGINT) gracefully.
-* No config search paths, no config files, no magic ENV var injections.
-
-[CLI Documentation](cmd/migrate) (includes CLI install instructions)
-
-### Basic usage
-
-```bash
-$ migrate -source file://path/to/migrations -database postgres://localhost:5432/database up 2
-```
-
-### Docker usage
-
-```bash
-$ docker run -v {{ migration dir }}:/migrations --network host migrate/migrate
-    -path=/migrations/ -database postgres://localhost:5432/database up 2
-```
-
-## Use in your Go project
-
-* API is stable and frozen for this release (v3 & v4).
-* Uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies.
-* To help prevent database corruptions, it supports graceful stops via `GracefulStop chan bool`.
-* Bring your own logger.
-* Uses `io.Reader` streams internally for low memory overhead.
-* Thread-safe and no goroutine leaks.
-
-__[Go Documentation](https://pkg.go.dev/github.com/golang-migrate/migrate/v4)__
-
-```go
-import (
-    "github.com/golang-migrate/migrate/v4"
-    _ "github.com/golang-migrate/migrate/v4/database/postgres"
-    _ "github.com/golang-migrate/migrate/v4/source/github"
-)
-
-func main() {
-    m, err := migrate.New(
-        "github://mattes:personal-access-token@mattes/migrate_test",
-        "postgres://localhost:5432/database?sslmode=enable")
-    m.Steps(2)
-}
-```
-
-Want to use an existing database client?
-
-```go
-import (
-    "database/sql"
-    _ "github.com/lib/pq"
-    "github.com/golang-migrate/migrate/v4"
-    "github.com/golang-migrate/migrate/v4/database/postgres"
-    _ "github.com/golang-migrate/migrate/v4/source/file"
-)
-
-func main() {
-    db, err := sql.Open("postgres", "postgres://localhost:5432/database?sslmode=enable")
-    driver, err := postgres.WithInstance(db, &postgres.Config{})
-    m, err := migrate.NewWithDatabaseInstance(
-        "file:///migrations",
-        "postgres", driver)
-    m.Up() // or m.Steps(2) if you want to explicitly set the number of migrations to run
-}
-```
-
-## Getting started
-
-Go to [getting started](GETTING_STARTED.md)
-
-## Tutorials
-
-* [CockroachDB](database/cockroachdb/TUTORIAL.md)
-* [PostgreSQL](database/postgres/TUTORIAL.md)
-
-(more tutorials to come)
-
-## Migration files
-
-Each migration has an up and down migration. [Why?](FAQ.md#why-two-separate-files-up-and-down-for-a-migration)
-
-```bash
-1481574547_create_users_table.up.sql
-1481574547_create_users_table.down.sql
-```
-
-[Best practices: How to write migrations.](MIGRATIONS.md)
-
-## Coming from another db migration tool?
-
-Check out [migradaptor](https://github.com/musinit/migradaptor/).
-*Note: migradaptor is not affiliated or supported by this project*
-
-## Versions
-
-Version | Supported? | Import | Notes
---------|------------|--------|------
-**master** | :white_check_mark: | `import "github.com/golang-migrate/migrate/v4"` | New features and bug fixes arrive here first |
-**v4** | :white_check_mark: | `import "github.com/golang-migrate/migrate/v4"` | Used for stable releases |
-**v3** | :x: | `import "github.com/golang-migrate/migrate"` (with package manager) or `import "gopkg.in/golang-migrate/migrate.v3"` (not recommended) | **DO NOT USE** - No longer supported |
-
-## Development and Contributing
-
-Yes, please! [`Makefile`](Makefile) is your friend,
-read the [development guide](CONTRIBUTING.md).
-
-Also have a look at the [FAQ](FAQ.md).
+User Service เป็น Backend Service ที่พัฒนาด้วยภาษา **Go (Fiber Framework)**  
+รองรับระบบ **Authentication แบบ Session + Cookie**  
+และออกแบบมาให้สามารถรันได้ทันทีด้วย **Docker Compose**  
+โดยผู้ใช้งานไม่จำเป็นต้องติดตั้ง Go หรือ PostgreSQL เอง
 
 ---
 
-Looking for alternatives? [https://awesome-go.com/#database](https://awesome-go.com/#database).
+## 🔧 Technology Stack
+
+- **Go** (Fiber v2)
+- **PostgreSQL**
+- **Session-based Authentication**
+- **Docker & Docker Compose**
+- RESTful API
+
+---
+
+## 📦 Project Structure
+
+```
+
+.
+├── README
+├── cmd
+│   └── user_service
+│       └── main.go
+├── deployments
+│   ├── docker
+│   │   ├── Dockerfile
+│   │   └── docker-compose.yml
+│   └── k8s
+│       ├── Upload_depl.yaml
+│       ├── Upload_impl.yaml
+│       └── Upload_svc.yaml
+├── env
+│   └── dev.env
+├── go.mod
+├── go.sum
+├── internal
+│   ├── config
+│   │   └── config.go
+│   ├── handler
+│   │   └── user_handler.go
+│   ├── middleware
+│   │   ├── auth_middleware.go
+│   │   └── error_handler.go
+│   ├── model
+│   │   ├── roles.go
+│   │   └── user.go
+│   ├── repository
+│   │   ├── session_repo.go
+│   │   └── user_repo.go
+│   ├── router
+│   │   └── router.go
+│   └── service
+│       ├── login.go
+│       └── register.go
+├── pkg
+│   └── db
+│       └── postgres.go
+└── scripts
+    ├── makefile
+    ├── migrate.bat
+    └── migrate.sh
+
+````
+
+โครงสร้างนี้ออกแบบมาเพื่อ:
+- แยก service อย่างชัดเจน
+- รองรับการขยายเป็นหลาย service ในอนาคต
+- ใช้งานได้เหมือนกันทุกเครื่อง (Windows / macOS / Linux)
+
+---
+
+## 🚀 Quick Start (One Command)
+
+### Requirements
+- Docker
+- Docker Compose
+
+### Run Project
+
+```bash
+git clone https://github.com/Natsu2022/GO_Userservice.git
+cd GO_Userservice/scipts
+make dev
+````
+
+หลังจากรันเสร็จ ระบบจะพร้อมใช้งานที่:
+
+```
+http://localhost:3455
+```
+
+---
+
+## ⚙️ Environment Configuration
+
+โปรเจกต์ใช้ environment variables สำหรับการตั้งค่า
+
+### `.env.example`
+
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=myDB
+
+SERVER_PORT=3455
+```
+
+> **หมายเหตุ:**
+> ในการใช้งานจริง เพียงคัดลอกไฟล์นี้เป็น `.env`
+> หรือใช้ค่า default ที่กำหนดไว้ใน `docker-compose.yml`
+
+---
+
+## 🐘 Database
+
+* PostgreSQL จะถูกสร้างอัตโนมัติผ่าน Docker
+* ใช้ Docker Volume สำหรับเก็บข้อมูล
+* ไม่ต้องติดตั้ง PostgreSQL บนเครื่อง
+
+Service ภายในจะเชื่อมต่อฐานข้อมูลผ่าน hostname:
+
+```
+postgres
+```
+
+---
+
+## 🔐 Authentication & Session
+
+ระบบใช้ **Session-based Authentication** โดยมีหลักการดังนี้:
+
+* เมื่อผู้ใช้ Login สำเร็จ
+
+  * ระบบจะสร้าง `session_id`
+  * เก็บ session ใน Database
+  * ส่ง `session_id` กลับไปที่ Client ผ่าน Cookie
+
+* Endpoint `/me`
+
+  * ใช้ตรวจสอบว่า session ใน Cookie ยังใช้งานได้หรือไม่
+  * ถ้า session ถูกต้อง → คืนข้อมูลผู้ใช้
+  * ถ้าไม่ถูกต้อง → ตอบ `401 Unauthorized`
+
+---
+
+## 📡 API Overview
+
+### Health Check
+
+```
+GET /
+```
+
+### Login
+
+```
+POST /api/v1/users/auth/login
+```
+
+### Get Current User (Session Check)
+
+```
+GET /api/v1/users/auth/me
+```
+
+---
+
+## 🐳 Docker Compose Overview
+
+`docker-compose.yml` จะประกอบด้วย:
+
+* `postgres` : Database Service
+* `user_service` : Go Backend Service
+
+Docker Compose จะจัดการ:
+
+* Network ระหว่าง service
+* Environment variables
+* Startup order
+
+ผู้ใช้งานไม่ต้องรัน container ทีละตัว
+
+---
+
+## ✅ Why Docker Compose?
+
+* ลดปัญหา "เครื่องผมรันได้ แต่เครื่องคุณรันไม่ได้"
+* ไม่ผูกกับ OS หรือ environment ใด ๆ
+* ใช้งานได้ด้วยคำสั่งเดียว
+* เหมาะสำหรับการส่งงาน / demo / ใช้งานร่วมกับทีม
+
+---
+
+## 🧪 Development Mode
+
+หากต้องการแก้ไขโค้ดและ rebuild:
+
+```bash
+docker compose up --build
+```
+
+หรือหยุดระบบ:
+
+```bash
+docker compose down
+```
+
+---
+
+## 📌 Notes
+
+* ห้าม commit ไฟล์ `.env` ที่มีข้อมูลจริง
+* Repository นี้มี `.env.example` สำหรับอ้างอิง
+* Session และ Database จะถูก reset หากลบ Docker volume
+
+---
+
+## 👤 Author
+
+Developed by
+**PHUMIN TONGLAR**
+(Cooperative Education / Backend Development Project)
+
+---
+
+## 📄 License
+
+This project is for educational and demonstration purposes.
+
+ด้านล่างนี้คือ **API Documentation ที่ครบ ใช้ได้จริง และเหมาะทั้งส่งอาจารย์ + ให้เพื่อนใช้**
+ผมเขียนให้ **ต่อจาก README เดิมได้ทันที** (คุณสามารถคัดลอกไปแปะต่อท้ายหัวข้อใหม่)
+
+> โฟกัส: ชัดเจน, ไม่กำกวม, ใช้ทดสอบได้จริง (Postman / curl / frontend)
+
+---
+
+## 📘 API Documentation
+
+Base URL (Development):
+
+```
+http://localhost:3455
+```
+
+API ทั้งหมดอยู่ภายใต้ namespace:
+
+```
+/api/v1/users
+```
+
+---
+
+## 🔍 Authentication Overview
+
+ระบบใช้ **Session-based Authentication (Cookie)**
+
+Flow:
+
+1. Client ส่ง username/password ไปที่ `/auth/login`
+2. Server ตรวจสอบข้อมูล
+3. ถ้าสำเร็จ:
+
+   * สร้าง `session_id`
+   * บันทึก session ลง Database
+   * ส่ง `session_id` กลับไปใน Cookie
+4. Client เรียก API ที่ต้องการ auth (เช่น `/auth/me`)
+
+   * Cookie จะถูกส่งไปอัตโนมัติ
+   * Server ตรวจสอบ session จาก Database
+
+> ❗ Client **ไม่ต้อง** แนบ token เอง
+> Cookie จะถูกจัดการโดย Browser / HTTP Client
+
+---
+
+## 🏥 Health Check
+
+### GET /
+
+ใช้ตรวจสอบว่า service ทำงานอยู่หรือไม่
+
+**Request**
+
+```
+GET /
+```
+
+**Response**
+
+```json
+{
+  "status": "ok",
+  "service": "user_service"
+}
+```
+
+**Status Codes**
+
+* `200 OK` – Service ทำงานปกติ
+
+---
+
+---
+
+## Register
+
+### POST http://127.0.0.1:3455/api/v1/users/register
+
+ใช้สำหรับสมัครเข้าระบบ
+
+---
+
+### Request
+
+**Headers**
+
+```
+Content-Type: application/json
+```
+
+**Body**
+
+```json
+{
+    "email":"tester@example.com",
+    "password":"test_register123",
+    "first_name":"tester",
+    "last_name":"register",
+    "physical_gender":"male",
+    "phone_number":"0987654321",
+    "signup_source":"web"
+}
+```
+
+---
+
+### Response (Success)
+
+**Status**
+
+```
+200 OK
+```
+
+## 🔐 Login
+
+### POST http://127.0.0.1:3455/api/v1/users/auth/login
+
+ใช้สำหรับเข้าสู่ระบบ และสร้าง session
+
+---
+
+### Request
+
+**Headers**
+
+```
+Content-Type: application/json
+```
+
+**Body**
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+---
+
+### Response (Success)
+
+**Status**
+
+```
+200 OK
+```
+
+**Set-Cookie**
+
+```
+session_id=<uuid>; HttpOnly; Path=/;
+```
+
+**Body**
+
+```json
+{
+  "status": 1,
+  "message": "login success"
+}
+```
+
+---
+
+### Response (Invalid Credentials)
+
+**Status**
+
+```
+401 Unauthorized
+```
+
+**Body**
+
+```json
+{
+  "status": 0,
+  "error": "invalid email or password"
+}
+```
+
+---
+
+### Notes
+
+* Cookie ถูกตั้งค่าเป็น `HttpOnly`
+* Client ไม่สามารถอ่านค่า `session_id` ได้จาก JavaScript
+* Session จะถูกใช้โดย API อื่นโดยอัตโนมัติ
+
+---
+
+## 👤 Get Current User (Session Validation)
+
+### GET http://127.0.0.1:3455/api/v1/users/auth/me
+
+ใช้ตรวจสอบว่า session ใน Cookie ยังใช้งานได้หรือไม่
+และดึงข้อมูลผู้ใช้ปัจจุบัน
+
+---
+
+### Request
+
+**Headers**
+
+```
+Cookie: session_id=<uuid>   (ส่งอัตโนมัติ)
+```
+
+---
+
+### Response (Success)
+
+**Status**
+
+```
+200 OK
+```
+
+**Body**
+
+```json
+{
+  "status": 1,
+  "data": {
+    "id": "b1b0c2a1-9f9c-4c7a-9d77-2a6e6f93f3a1",
+    "email": "user@example.com",
+    "display_name": "Test User"
+  }
+}
+```
+
+---
+
+### Response (Session Not Found / Expired)
+
+**Status**
+
+```
+401 Unauthorized
+```
+
+**Body**
+
+```json
+{
+  "status": 0,
+  "error": "session not found"
+}
+```
+
+---
+
+### Response (No Cookie)
+
+**Status**
+
+```
+401 Unauthorized
+```
+
+**Body**
+
+```json
+{
+  "status": 0,
+  "error": "unauthorized"
+}
+```
+
+---
+
+### Notes
+
+* API นี้ใช้สำหรับ:
+
+  * ตรวจสอบว่า user login อยู่หรือไม่
+  * ใช้ตอนโหลดหน้าเว็บ (เช่น `/profile`)
+* หาก session หมดอายุหรือไม่ถูกต้อง ระบบจะตอบ `401`
+
+---
+
+## 🚪 Logout (ถ้ามี / แนะนำให้เพิ่ม)
+
+> หากคุณยังไม่ได้ implement สามารถเพิ่ม endpoint นี้ได้ในอนาคต
+
+### POST http://127.0.0.1:3455/api/v1/users/auth/logout
+
+**Behavior**
+
+* ลบ session จาก Database
+* ลบ cookie `session_id`
+
+**Response**
+
+```json
+{
+  "status": 1,
+  "message": "logout success"
+}
+```
+
+---
+
+## 📊 HTTP Status Code Summary
+
+| Status Code | Meaning               |
+| ----------- | --------------------- |
+| 200         | Success               |
+| 400         | Bad Request           |
+| 401         | Unauthorized          |
+| 500         | Internal Server Error |
+
+---
+
+## 🧪 Example: Testing with curl
+
+### Login
+
+```bash
+curl -i -X POST http://127.0.0.1:3455/api/v1/users/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password123"}'
+```
+
+---
+
+### Check Session
+
+```bash
+curl -i GET http://127.0.0.1:3455/api/v1/users/auth/me \
+  --cookie "session_id=<uuid>"
+```
+
+---
+
+## 🔒 Security Notes
+
+* ใช้ Session + HttpOnly Cookie
+* ไม่ส่ง token ผ่าน URL หรือ Header
+* ป้องกัน XSS จากการเข้าถึง session
+* เหมาะสำหรับ Web Application
+
+---
+
+## 📌 Summary
+
+* API ออกแบบตาม RESTful principle
+* Authentication ใช้ Session-based (Server-side)
+* ใช้งานง่ายสำหรับ frontend
+* รองรับ Docker Compose แบบ zero-config
