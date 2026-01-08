@@ -3,7 +3,7 @@ CREATE TABLE user_profiles (
     display_name TEXT,
     phone_number TEXT,
     physical_gender TEXT,
-    birthday DATE,
+    birthday TEXT,
     profile_picture_url TEXT,
     profile_picture_background_url TEXT,
     updated_at TIMESTAMP DEFAULT now(),

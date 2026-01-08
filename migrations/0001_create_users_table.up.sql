@@ -17,7 +17,7 @@ CREATE TABLE users (
     referral_code TEXT,
     source_list JSONB DEFAULT '{}',
     physical_gender TEXT,
-    birthday DATE,
+    birthday TEXT,
     profile_picture_url TEXT DEFAULT 'DEFAULT_picture',
     profile_picture_background_url TEXT DEFAULT 'DEFAULT_picture_background',
     is_deleted BOOLEAN DEFAULT FALSE

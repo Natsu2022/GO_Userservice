@@ -4,25 +4,25 @@ import "github.com/google/uuid"
 
 // Role table
 type Role struct {
-	ID   int    `db:"id"`
-	Name string `db:"name"`
+	ID   uuid.UUID `db:"id"`
+	Name string    `db:"name"`
 }
 
 // Permission table
 type Permission struct {
-	ID          int    `db:"id"`
-	Permission  string `db:"permission"`
-	Description string `db:"description"`
+	ID          uuid.UUID `db:"id"`
+	Permission  string    `db:"permission"`
+	Description string    `db:"description"`
 }
 
 // RolePermission table
 type RolePermission struct {
-	RoleID       int `db:"role_id"`
-	PermissionID int `db:"permission_id"`
+	RoleID       uuid.UUID `db:"role_id"`
+	PermissionID uuid.UUID `db:"permission_id"`
 }
 
 // UserPermission table
 type UserPermission struct {
 	UserID       uuid.UUID `db:"user_id"`
-	PermissionID int       `db:"permission_id"`
+	PermissionID uuid.UUID `db:"permission_id"`
 }

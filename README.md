@@ -1,15 +1,31 @@
-User Service เป็น Backend Service ที่พัฒนาด้วยภาษา **Go (Fiber Framework)**  
-รองรับระบบ **Authentication แบบ Session + Cookie**  
-และออกแบบมาให้สามารถรันได้ทันทีด้วย **Docker Compose**  
-โดยผู้ใช้งานไม่จำเป็นต้องติดตั้ง Go หรือ PostgreSQL เอง
+ด้านล่างนี้คือ **README.md เวอร์ชันสมบูรณ์ “ปัจจุบันจริง”**
+ผมจัดโครงสร้าง + เนื้อหาใหม่ให้ **เพื่อนร่วมทีม clone → run → dev ต่อได้ทันที**
+คุณสามารถ **copy-paste ทั้งไฟล์** ไปแทน README.md เดิมได้เลย
+
+---
+
+```md
+# User Service (OSCIRA MCS)
+
+User Service คือบริการจัดการผู้ใช้งาน (Authentication / Authorization / Profile / User Option)  
+พัฒนาด้วย **Go (Fiber v2)**, **PostgreSQL**, และ **golang-migrate**  
+ออกแบบตามแนวคิด **Clean Architecture + Session-based Auth + RBAC**
+
+เหมาะสำหรับ:
+- ทำงานเป็นทีม
+- ใช้พัฒนา (Dev) ต่อ
+- ส่งงาน / สหกิจ / Demo อาจารย์
 
 ---
 
 ## 🔧 Technology Stack
 
-- **Go** (Fiber v2)
+- **Go 1.22+**
+- **Fiber v2**
 - **PostgreSQL**
-- **Session-based Authentication**
+- **pgx / pgxpool**
+- **Session-based Authentication (Cookie)**
+- **golang-migrate**
 - **Docker & Docker Compose**
 - RESTful API
 
@@ -20,591 +36,356 @@ User Service เป็น Backend Service ที่พัฒนาด้วย�
 ```
 
 .
-├── LICENSE
-├── README.md
 ├── cmd
-│   └── user_service
-│       └── main.go
-├── deployments
-│   ├── docker
-│   │   └── Dockerfile
-│   └── k8s
-│       ├── Upload_depl.yaml
-│       ├── Upload_impl.yaml
-│       └── Upload_svc.yaml
+│   └── user_service
+│       └── main.go
+├── internal
+│   ├── config
+│   │   └── config.go
+│   ├── constants
+│   │   └── context.go
+│   ├── handler
+│   │   └── user_handler.go
+│   ├── middleware
+│   │   ├── auth_middleware.go
+│   │   └── error_handler.go
+│   ├── model
+│   │   ├── user.go
+│   │   ├── roles.go
+│   │   └── profile.go
+│   ├── repository
+│   │   ├── user_repo.go
+│   │   ├── session_repo.go
+│   │   └── assign_role.go
+│   ├── router
+│   │   └── router.go
+│   └── service
+│       ├── auth_service.go
+│       ├── user_service.go
+│       └── profile_service.go
+├── migrations
+│   ├── 0001_create_users_table.up.sql
+│   ├── 0002_create_roles_table.up.sql
+│   ├── 0003_create_user_roles.up.sql
+│   ├── 0007_create_session_table.up.sql
+│   ├── 0016_create_user_profile.up.sql
+│   └── ...
+├── pkg
+│   └── db
+│       └── postgres.go
+├── scripts
+│   ├── migrate.sh
+│   ├── migrate.bat
+│   └── Makefile
 ├── docker-compose.yml
 ├── env
-│   └── dev.env
+│   └── dev.env
 ├── go.mod
-├── go.sum
-├── internal
-│   ├── config
-│   │   └── config.go
-│   ├── handler
-│   │   └── user_handler.go
-│   ├── middleware
-│   │   ├── auth_middleware.go
-│   │   └── error_handler.go
-│   ├── model
-│   │   ├── roles.go
-│   │   └── user.go
-│   ├── repository
-│   │   ├── assign_role.go
-│   │   ├── session_repo.go
-│   │   └── user_repo.go
-│   ├── router
-│   │   └── router.go
-│   └── service
-│       ├── login.go
-│       └── register.go
-├── migrations
-│   ├── 0000_drop_all_table.drop.sql
-│   ├── 0001_create_users_table.up.sql
-│   ├── 0002_create_roles_table.up.sql
-│   ├── 0003_create_user_role.up.sql
-│   ├── 0004_create_permissions_table.up.sql
-│   ├── 0005_create_role_permissions_table.up.sql
-│   ├── 0006_create_user_permissions_table.up.sql
-│   ├── 0007_create_session_table.up.sql
-│   ├── 0008_create_preference_table.up.sql
-│   ├── 0009_create_location_table.up.sql
-│   ├── 0010_create_source_list_table.up.sql
-│   ├── 0011_seed_superadmin.up.sql
-│   ├── 0012_seed_role.up.sql
-│   ├── 0013_seed_permission.up.sql
-│   ├── 0014_seed_role_permission.up.sql
-│   ├── 0015_assign_superadmin_role.up.sql
-│   └── 0016_create_user_profile.up.sql
-├── pkg
-│   └── db
-│       └── postgres.go
-├── scripts
-│   ├── makefile
-│   ├── migrate.bat
-│   └── migrate.sh
-├── services
-│   └── user_service
-│       └── migrations
+└── README.md
 
-````
-
-โครงสร้างนี้ออกแบบมาเพื่อ:
-- แยก service อย่างชัดเจน
-- รองรับการขยายเป็นหลาย service ในอนาคต
-- ใช้งานได้เหมือนกันทุกเครื่อง (Windows / macOS / Linux)
+```
 
 ---
 
-## 🚀 Quick Start (One Command)
+## 🧠 Architecture Overview
+
+โครงสร้างใช้แนวคิด **Clean Architecture**
+
+```
+
+Handler  →  Service  →  Repository  →  Database
+
+````
+
+หน้าที่แต่ละ layer:
+
+- **Handler**  
+  รับ HTTP request / response
+- **Service**  
+  Business logic
+- **Repository**  
+  ติดต่อ Database เท่านั้น
+- **Middleware**  
+  Authentication / Authorization
+- **Constants**  
+  Key กลาง เช่น ContextUserID
+
+---
+
+## 🚀 Quick Start (สำหรับเพื่อนร่วมทีม)
 
 ### Requirements
+
 - Docker
 - Docker Compose
+- Git
 
-### Run Project
+---
+
+### 1️⃣ Clone Project
 
 ```bash
 git clone https://github.com/Natsu2022/GO_Userservice.git
-cd GO_Userservice/scipts
-make dev
+cd GO_Userservice
 ````
-
-หลังจากรันเสร็จ ระบบจะพร้อมใช้งานที่:
-
-```
-http://localhost:3455
-```
 
 ---
 
-## ⚙️ Environment Configuration
+### 2️⃣ ตั้งค่า Environment
 
-โปรเจกต์ใช้ environment variables สำหรับการตั้งค่า
+```bash
+cp env/dev.env .env
+```
 
-### `.env.example`
+ตัวอย่าง `.env`
 
 ```env
 DB_HOST=postgres
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
-DB_NAME=myDB
+DB_NAME=oscira_user
 
 SERVER_PORT=3455
 ```
 
-> **หมายเหตุ:**
-> ในการใช้งานจริง เพียงคัดลอกไฟล์นี้เป็น `.env`
-> หรือใช้ค่า default ที่กำหนดไว้ใน `docker-compose.yml`
-
 ---
 
-## 🐘 Database
-
-* PostgreSQL จะถูกสร้างอัตโนมัติผ่าน Docker
-* ใช้ Docker Volume สำหรับเก็บข้อมูล
-* ไม่ต้องติดตั้ง PostgreSQL บนเครื่อง
-
-Service ภายในจะเชื่อมต่อฐานข้อมูลผ่าน hostname:
-
-```
-postgres
-```
-
----
-
-## 🔐 Authentication & Session
-
-ระบบใช้ **Session-based Authentication** โดยมีหลักการดังนี้:
-
-* เมื่อผู้ใช้ Login สำเร็จ
-
-  * ระบบจะสร้าง `session_id`
-  * เก็บ session ใน Database
-  * ส่ง `session_id` กลับไปที่ Client ผ่าน Cookie
-
-* Endpoint `/me`
-
-  * ใช้ตรวจสอบว่า session ใน Cookie ยังใช้งานได้หรือไม่
-  * ถ้า session ถูกต้อง → คืนข้อมูลผู้ใช้
-  * ถ้าไม่ถูกต้อง → ตอบ `401 Unauthorized`
-
----
-
-## 📡 API Overview
-
-### Health Check
-
-```
-GET /
-```
-
-### Login
-
-```
-POST /api/v1/users/auth/login
-```
-
-### Get Current User (Session Check)
-
-```
-GET /api/v1/users/auth/me
-```
-
----
-
-## 🐳 Docker Compose Overview
-
-`docker-compose.yml` จะประกอบด้วย:
-
-* `postgres` : Database Service
-* `user_service` : Go Backend Service
-
-Docker Compose จะจัดการ:
-
-* Network ระหว่าง service
-* Environment variables
-* Startup order
-
-ผู้ใช้งานไม่ต้องรัน container ทีละตัว
-
----
-
-## ✅ Why Docker Compose?
-
-* ลดปัญหา "เครื่องผมรันได้ แต่เครื่องคุณรันไม่ได้"
-* ไม่ผูกกับ OS หรือ environment ใด ๆ
-* ใช้งานได้ด้วยคำสั่งเดียว
-* เหมาะสำหรับการส่งงาน / demo / ใช้งานร่วมกับทีม
-
----
-
-## 🧪 Development Mode
-
-หากต้องการแก้ไขโค้ดและ rebuild:
+### 3️⃣ Run ด้วย Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-หรือหยุดระบบ:
-
-```bash
-docker compose down
-```
-
----
-
-## 📌 Notes
-
-* ห้าม commit ไฟล์ `.env` ที่มีข้อมูลจริง
-* Repository นี้มี `.env.example` สำหรับอ้างอิง
-* Session และ Database จะถูก reset หากลบ Docker volume
-
----
-
-## 👤 Author
-
-Developed by
-**PHUMIN TONGLAR**
-(Cooperative Education / Backend Development Project)
-
----
-
-## 📄 License
-
-This project is for educational and demonstration purposes.
-
-ด้านล่างนี้คือ **API Documentation ที่ครบ ใช้ได้จริง และเหมาะทั้งส่งอาจารย์ + ให้เพื่อนใช้**
-ผมเขียนให้ **ต่อจาก README เดิมได้ทันที** (คุณสามารถคัดลอกไปแปะต่อท้ายหัวข้อใหม่)
-
-> โฟกัส: ชัดเจน, ไม่กำกวม, ใช้ทดสอบได้จริง (Postman / curl / frontend)
-
----
-
-## 📘 API Documentation
-
-Base URL (Development):
+Service จะพร้อมใช้งานที่:
 
 ```
 http://localhost:3455
 ```
 
-API ทั้งหมดอยู่ภายใต้ namespace:
+---
+
+## 🐘 Database & Migration
+
+### ใช้ golang-migrate
+
+**Up migration**
+
+```bash
+make migrate-up
+```
+
+**Down migration**
+
+```bash
+make migrate-down
+```
+
+> ✔ สามารถพัฒนาแบบ **ไม่ต้องใช้ Docker ก็ได้**
+> แค่มี PostgreSQL และตั้งค่า `.env` ให้ถูกต้อง
+
+---
+
+## 🔐 Authentication (สำคัญ)
+
+ระบบใช้ **Session-based Authentication**
+
+### Flow
+
+1. User login
+2. Server สร้าง `session_id`
+3. เก็บ session ลง DB
+4. ส่ง `session_id` กลับใน **HttpOnly Cookie**
+5. ทุก request ที่ protected จะใช้ cookie นี้อัตโนมัติ
+
+---
+
+## ⚠️ สำคัญมาก: Context Key
+
+ไฟล์ `internal/constants/context.go`
+
+```go
+package constants
+
+const ContextUserID = "userID"
+```
+
+**ต้องใช้ key นี้ตรงกันทุกที่**
+
+Middleware:
+
+```go
+c.Locals(constants.ContextUserID, userID)
+```
+
+Handler:
+
+```go
+uid := c.Locals(constants.ContextUserID).(uuid.UUID)
+```
+
+❌ ถ้า key ไม่ตรง → `interface {} is nil`
+
+---
+
+## 🧩 API Routes
+
+Base URL:
 
 ```
-/api/v1/users
+http://localhost:3455/api/v1
 ```
 
 ---
 
-## 🔍 Authentication Overview
+### 🔓 Public
 
-ระบบใช้ **Session-based Authentication (Cookie)**
-
-Flow:
-
-1. Client ส่ง username/password ไปที่ `/auth/login`
-2. Server ตรวจสอบข้อมูล
-3. ถ้าสำเร็จ:
-
-   * สร้าง `session_id`
-   * บันทึก session ลง Database
-   * ส่ง `session_id` กลับไปใน Cookie
-4. Client เรียก API ที่ต้องการ auth (เช่น `/auth/me`)
-
-   * Cookie จะถูกส่งไปอัตโนมัติ
-   * Server ตรวจสอบ session จาก Database
-
-> ❗ Client **ไม่ต้อง** แนบ token เอง
-> Cookie จะถูกจัดการโดย Browser / HTTP Client
-
----
-
-## 🏥 Health Check
-
-### GET /
-
-ใช้ตรวจสอบว่า service ทำงานอยู่หรือไม่
-
-**Request**
+#### Register
 
 ```
-GET /
+POST /users/register
 ```
-
-**Response**
 
 ```json
 {
-  "status": "ok",
-  "service": "user_service"
+  "email": "tester@example.com",
+  "password": "password123",
+  "first_name": "Tester",
+  "last_name": "User"
 }
 ```
 
-**Status Codes**
-
-* `200 OK` – Service ทำงานปกติ
-
 ---
 
----
-
-## Register
-
-### POST http://127.0.0.1:3455/api/v1/users/register
-
-ใช้สำหรับสมัครเข้าระบบ
-
----
-
-### Request
-
-**Headers**
+#### Login
 
 ```
-Content-Type: application/json
+POST /auth/login
 ```
-
-**Body**
 
 ```json
 {
-    "email":"tester@example.com",
-    "password":"test_register123",
-    "first_name":"tester",
-    "last_name":"register",
-    "physical_gender":"male",
-    "phone_number":"0987654321",
-    "signup_source":"web"
-}
-```
-
----
-
-### Response (Success)
-
-**Status**
-
-```
-200 OK
-```
-
-## 🔐 Login
-
-### POST http://127.0.0.1:3455/api/v1/users/auth/login
-
-ใช้สำหรับเข้าสู่ระบบ และสร้าง session
-
----
-
-### Request
-
-**Headers**
-
-```
-Content-Type: application/json
-```
-
-**Body**
-
-```json
-{
-  "email": "user@example.com",
+  "email": "tester@example.com",
   "password": "password123"
 }
 ```
 
+Response จะตั้ง Cookie:
+
+```
+session_id=<uuid>; HttpOnly
+```
+
 ---
 
-### Response (Success)
+### 🔒 Protected (ต้อง Login)
 
-**Status**
-
-```
-200 OK
-```
-
-**Set-Cookie**
+#### Check Session
 
 ```
-session_id=<uuid>; HttpOnly; Path=/;
+GET /me
 ```
-
-**Body**
 
 ```json
 {
-  "status": 1,
-  "message": "login success"
+  "message": "You are authenticated",
+  "user_id": "uuid"
 }
 ```
 
 ---
 
-### Response (Invalid Credentials)
-
-**Status**
+#### Get My Profile
 
 ```
-401 Unauthorized
+GET /me/profile
 ```
 
-**Body**
+---
+
+#### Update My Profile
+
+```
+PATCH /me/profile
+```
 
 ```json
 {
-  "status": 0,
-  "error": "invalid email or password"
+  "display_name": "New Name",
+  "phone_number": "0999999999"
 }
 ```
 
 ---
 
-### Notes
-
-* Cookie ถูกตั้งค่าเป็น `HttpOnly`
-* Client ไม่สามารถอ่านค่า `session_id` ได้จาก JavaScript
-* Session จะถูกใช้โดย API อื่นโดยอัตโนมัติ
-
----
-
-## 👤 Get Current User (Session Validation)
-
-### GET http://127.0.0.1:3455/api/v1/users/auth/me
-
-ใช้ตรวจสอบว่า session ใน Cookie ยังใช้งานได้หรือไม่
-และดึงข้อมูลผู้ใช้ปัจจุบัน
-
----
-
-### Request
-
-**Headers**
-
-```
-Cookie: session_id=<uuid>   (ส่งอัตโนมัติ)
-```
-
----
-
-### Response (Success)
-
-**Status**
-
-```
-200 OK
-```
-
-**Body**
-
-```json
-{
-  "status": 1,
-  "data": {
-    "id": "b1b0c2a1-9f9c-4c7a-9d77-2a6e6f93f3a1",
-    "email": "user@example.com",
-    "display_name": "Test User"
-  }
-}
-```
-
----
-
-### Response (Session Not Found / Expired)
-
-**Status**
-
-```
-401 Unauthorized
-```
-
-**Body**
-
-```json
-{
-  "status": 0,
-  "error": "session not found"
-}
-```
-
----
-
-### Response (No Cookie)
-
-**Status**
-
-```
-401 Unauthorized
-```
-
-**Body**
-
-```json
-{
-  "status": 0,
-  "error": "unauthorized"
-}
-```
-
----
-
-### Notes
-
-* API นี้ใช้สำหรับ:
-
-  * ตรวจสอบว่า user login อยู่หรือไม่
-  * ใช้ตอนโหลดหน้าเว็บ (เช่น `/profile`)
-* หาก session หมดอายุหรือไม่ถูกต้อง ระบบจะตอบ `401`
-
----
-
-## 🚪 Logout (ถ้ามี / แนะนำให้เพิ่ม)
-
-> หากคุณยังไม่ได้ implement สามารถเพิ่ม endpoint นี้ได้ในอนาคต
-
-### POST http://127.0.0.1:3455/api/v1/users/auth/logout
-
-**Behavior**
-
-* ลบ session จาก Database
-* ลบ cookie `session_id`
-
-**Response**
-
-```json
-{
-  "status": 1,
-  "message": "logout success"
-}
-```
-
----
-
-## 📊 HTTP Status Code Summary
-
-| Status Code | Meaning               |
-| ----------- | --------------------- |
-| 200         | Success               |
-| 400         | Bad Request           |
-| 401         | Unauthorized          |
-| 500         | Internal Server Error |
-
----
-
-## 🧪 Example: Testing with curl
-
-### Login
+## 🧪 ตัวอย่าง curl
 
 ```bash
-curl -i -X POST http://127.0.0.1:3455/api/v1/users/auth/login \
+curl -i -X POST http://localhost:3455/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
+  -d '{"email":"tester@example.com","password":"password123"}'
 ```
 
 ---
 
-### Check Session
+## 🛠 Common Errors & Fix
 
-```bash
-curl -i GET http://127.0.0.1:3455/api/v1/users/auth/me \
-  --cookie "session_id=<uuid>"
+### ❌ `interface conversion: interface {} is nil, not uuid.UUID`
+
+**สาเหตุ**
+
+* Context key ไม่ตรงกัน
+
+**วิธีแก้**
+
+* ใช้ `constants.ContextUserID = "userID"` ให้ตรงทุกไฟล์
+
+---
+
+### ❌ `userRepository does not implement UserRepository`
+
+**สาเหตุ**
+
+* struct ขาด method ที่ interface กำหนด
+
+**วิธีแก้**
+
+* ตรวจ method signature ให้ตรง 100%
+* ชื่อ + parameter + return type ต้องตรง
+
+---
+
+## 👥 สำหรับเพื่อนร่วมทีม
+
+สิ่งที่เพื่อนต้องรู้:
+
+* Login ก่อนเสมอ
+* Cookie ถูกจัดการให้อัตโนมัติ
+* ใช้ `/me` เช็ค session
+* อย่าเปลี่ยน Context key เอง
+
+---
+
+## 👤 Author
+
+**PHUMIN TONGLAR**
+Backend Development / Cooperative Education Project
+
+---
+
+## 📄 License
+
+Educational & Demonstration Purpose Only
+
 ```
 
 ---
 
-## 🔒 Security Notes
+ถ้าคุณต้องการ:
+- แยก **API Doc เป็นไฟล์ Postman**
+- เพิ่ม **User Option / Preference API**
+- เพิ่ม **RBAC Middleware**
+- หรือทำ **Diagram Architecture**
 
-* ใช้ Session + HttpOnly Cookie
-* ไม่ส่ง token ผ่าน URL หรือ Header
-* ป้องกัน XSS จากการเข้าถึง session
-* เหมาะสำหรับ Web Application
-
----
-
-## 📌 Summary
-
-* API ออกแบบตาม RESTful principle
-* Authentication ใช้ Session-based (Server-side)
-* ใช้งานง่ายสำหรับ frontend
-* รองรับ Docker Compose แบบ zero-config
+บอกได้เลย ผมต่อให้เป็น production-grade ได้ทันที
+```

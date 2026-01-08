@@ -19,24 +19,15 @@ func SetupRoutes(app *fiber.App, db *pgxpool.Pool) {
 	userService := service.NewUserService(userRepo)
 	authService := service.NewAuthService(userRepo, sessionRepo)
 
-	userHandler := handler.NewUserHandler(userService, authService)
+	handler := handler.NewUserHandler(userService, authService)
 
 	api := app.Group("/api/v1")
 
-	users := api.Group("/users")
-	users.Post("/register", userHandler.CreateUser)
+	api.Post("/users/register", handler.CreateUser)
+	api.Post("/auth/login", handler.Login)
+	api.Post("/auth/logout", handler.Logout)
 
-	auth := users.Group("/auth")
-	auth.Post("/login", userHandler.Login)
-	auth.Post("/logout", userHandler.Logout)
-
-	// Protected routes
-	protected := auth.Group("/me", middleware.AuthGuard(sessionRepo))
-	protected.Get("/", func(c *fiber.Ctx) error {
-		userID := c.Locals("userID") // UUID ของ user
-		return c.JSON(fiber.Map{
-			"message": "You are authenticated",
-			"user_id": userID,
-		})
-	})
+	me := api.Group("/me", middleware.AuthGuard(sessionRepo))
+	me.Get("/profile", handler.GetMyProfile)
+	me.Patch("/profile", handler.UpdateMyProfile)
 }

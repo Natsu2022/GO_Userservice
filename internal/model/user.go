@@ -24,7 +24,7 @@ type User struct {
 	ReferralCode                string    `json:"referral_code"`
 	SourceList                  string    `json:"source_list"` // JSONB
 	PhysicalGender              string    `json:"physical_gender"`
-	Birthday                    time.Time `json:"birthday"`
+	Birthday                    string    `json:"birthday"`
 	ProfilePictureURL           string    `json:"profile_picture_url"`
 	ProfilePictureBackgroundURL string    `json:"profile_picture_background_url"`
 	IsDeleted                   bool      `json:"is_deleted"`

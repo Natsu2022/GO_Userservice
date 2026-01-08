@@ -14,6 +14,8 @@ import (
 
 type UserService interface {
 	CreateUser(ctx context.Context, req model.CreateUserRequest) (uuid.UUID, error)
+	UpdateMyProfile(ctx context.Context, userID uuid.UUID, req model.UpdateProfileRequest) error
+	GetMyProfile(ctx context.Context, userID uuid.UUID) (*model.UserProfile, error)
 }
 
 type userService struct {
