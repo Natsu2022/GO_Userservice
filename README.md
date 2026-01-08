@@ -39,49 +39,83 @@ User Service คือบริการจัดการผู้ใช้ง�
 ├── cmd
 │   └── user_service
 │       └── main.go
+├── deployments
+│   ├── docker
+│   │   ├── docker-compose.yml
+│   │   └── Dockerfile
+│   └── k8s
+│       ├── Upload_depl.yaml
+│       ├── Upload_impl.yaml
+│       └── Upload_svc.yaml
+├── docker-compose.yml
+├── env
+│   └── dev.env
+├── go.mod
+├── go.sum
 ├── internal
 │   ├── config
 │   │   └── config.go
 │   ├── constants
-│   │   └── context.go
+│   │   └── constants.go
 │   ├── handler
+│   │   ├── profile_handler.go
 │   │   └── user_handler.go
 │   ├── middleware
 │   │   ├── auth_middleware.go
 │   │   └── error_handler.go
 │   ├── model
-│   │   ├── user.go
 │   │   ├── roles.go
-│   │   └── profile.go
+│   │   ├── update_profile.go
+│   │   └── user.go
 │   ├── repository
-│   │   ├── user_repo.go
+│   │   ├── assign_role_repo.go
 │   │   ├── session_repo.go
-│   │   └── assign_role.go
+│   │   ├── update_profile_repo.go
+│   │   └── user_repo.go
 │   ├── router
 │   │   └── router.go
 │   └── service
-│       ├── auth_service.go
-│       ├── user_service.go
-│       └── profile_service.go
+│       ├── login.go
+│       ├── profile_service.go
+│       └── register.go
+├── LICENSE
 ├── migrations
+│   ├── 0000_drop_all_table.drop.sql
+│   ├── 0001_create_users_table.down.sql
 │   ├── 0001_create_users_table.up.sql
+│   ├── 0002_create_roles_table.down.sql
 │   ├── 0002_create_roles_table.up.sql
-│   ├── 0003_create_user_roles.up.sql
+│   ├── 0003_create_user_role.up.sql
+│   ├── 0004_create_permissions_table.down.sql
+│   ├── 0004_create_permissions_table.up.sql
+│   ├── 0005_create_role_permissions_table.down.sql
+│   ├── 0005_create_role_permissions_table.up.sql
+│   ├── 0006_create_user_permissions_table.down.sql
+│   ├── 0006_create_user_permissions_table.up.sql
+│   ├── 0007_create_session_table.down.sql
 │   ├── 0007_create_session_table.up.sql
-│   ├── 0016_create_user_profile.up.sql
-│   └── ...
+│   ├── 0008_create_preference_table.down.sql
+│   ├── 0008_create_preference_table.up.sql
+│   ├── 0009_create_location_table.down.sql
+│   ├── 0009_create_location_table.up.sql
+│   ├── 0010_create_source_list_table.down.sql
+│   ├── 0010_create_source_list_table.up.sql
+│   ├── 0011_seed_superadmin.up.sql
+│   ├── 0012_seed_role.up.sql
+│   ├── 0013_seed_permission.up.sql
+│   ├── 0014_seed_role_permission.up.sql
+│   ├── 0015_assign_superadmin_role.up.sql
+│   └── 0016_create_user_profile.up.sql
 ├── pkg
 │   └── db
 │       └── postgres.go
-├── scripts
-│   ├── migrate.sh
-│   ├── migrate.bat
-│   └── Makefile
-├── docker-compose.yml
-├── env
-│   └── dev.env
-├── go.mod
-└── README.md
+├── README.md
+└── scripts
+    ├── LICENSE
+    ├── makefile
+    ├── migrate.bat
+    ├── migrate.sh
+    └── README.md
 
 ```
 
